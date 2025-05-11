@@ -103,7 +103,7 @@
        timer.setCoalesce(true);
    
        //allocate enough memory for the buffer used to receive data from the server
-       buf = new byte[15000];    
+       buf = new byte[15000];
      }
    
      //------------------------------------
