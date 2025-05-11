@@ -12,10 +12,9 @@ import javax.swing.*;
 import javax.swing.Timer;
 
 public class Client {
-
   // GUI
   // ----
-  JFrame f = new JFrame("Client");
+  JFrame f = new JFrame("RTSP Streaming Client");
   JButton setupButton = new JButton("Setup");
   JButton playButton = new JButton("Play");
   JButton pauseButton = new JButton("Pause");
@@ -68,10 +67,35 @@ public class Client {
       public void windowClosing(WindowEvent e) {
         System.exit(0);
       }
-    });
+    }); // Buttons
+    buttonPanel.setLayout(new GridLayout(1, 0, 10, 0));
+    buttonPanel.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
 
-    // Buttons
-    buttonPanel.setLayout(new GridLayout(1, 0));
+    // Style the buttons
+    setupButton.setBackground(new Color(66, 134, 244));
+    setupButton.setForeground(Color.WHITE);
+    setupButton.setFont(new Font("Arial", Font.BOLD, 14));
+    setupButton.setFocusPainted(false);
+    setupButton.setBorder(BorderFactory.createRaisedBevelBorder());
+
+    playButton.setBackground(new Color(76, 175, 80));
+    playButton.setForeground(Color.WHITE);
+    playButton.setFont(new Font("Arial", Font.BOLD, 14));
+    playButton.setFocusPainted(false);
+    playButton.setBorder(BorderFactory.createRaisedBevelBorder());
+
+    pauseButton.setBackground(new Color(255, 193, 7));
+    pauseButton.setForeground(Color.WHITE);
+    pauseButton.setFont(new Font("Arial", Font.BOLD, 14));
+    pauseButton.setFocusPainted(false);
+    pauseButton.setBorder(BorderFactory.createRaisedBevelBorder());
+
+    tearButton.setBackground(new Color(244, 67, 54));
+    tearButton.setForeground(Color.WHITE);
+    tearButton.setFont(new Font("Arial", Font.BOLD, 14));
+    tearButton.setFocusPainted(false);
+    tearButton.setBorder(BorderFactory.createRaisedBevelBorder());
+
     buttonPanel.add(setupButton);
     buttonPanel.add(playButton);
     buttonPanel.add(pauseButton);
@@ -82,27 +106,27 @@ public class Client {
     tearButton.addActionListener(new tearButtonListener());
 
     // Image display label
-    iconLabel.setIcon(null);
-
-    // frame layout
+    iconLabel.setIcon(null); // frame layout
     mainPanel.setLayout(null);
+    mainPanel.setBackground(new Color(240, 240, 240));
     mainPanel.add(iconLabel);
     mainPanel.add(buttonPanel);
-    iconLabel.setBounds(0, 0, 380, 280);
-    buttonPanel.setBounds(0, 280, 380, 50);
+
+    // Increase video display area
+    iconLabel.setBounds(0, 0, 640, 480);
+    buttonPanel.setBounds(0, 480, 640, 60);
 
     f.getContentPane().add(mainPanel, BorderLayout.CENTER);
-    f.setSize(new Dimension(390, 370));
+    f.setSize(new Dimension(650, 580));
+    f.setLocationRelativeTo(null); // Center the window
     f.setVisible(true);
 
     // init timer
     // --------------------------
     timer = new Timer(20, new timerListener());
     timer.setInitialDelay(0);
-    timer.setCoalesce(true);
-
-    // allocate enough memory for the buffer used to receive data from the server
-    buf = new byte[15000];
+    timer.setCoalesce(true); // allocate enough memory for the buffer used to receive data from the server
+    buf = new byte[65536]; // Increased buffer size for larger frames
   }
 
   // ------------------------------------
