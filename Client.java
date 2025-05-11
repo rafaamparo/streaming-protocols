@@ -120,18 +120,25 @@ public class Client { // GUI
     pauseButton.addActionListener(new pauseButtonListener());
     advanceButton.addActionListener(new advanceButtonListener());
     backButton.addActionListener(new backButtonListener());
-    tearButton.addActionListener(new tearButtonListener());
+    tearButton.addActionListener(new tearButtonListener()); // Image display label
+    iconLabel.setIcon(null);
+    iconLabel.setHorizontalAlignment(JLabel.CENTER); // Center the video horizontally
+    iconLabel.setVerticalAlignment(JLabel.CENTER); // Center the video vertically
+    iconLabel.setPreferredSize(new Dimension(640, 480)); // Maintain size but don't stretch content
 
-    // Image display label
-    iconLabel.setIcon(null); // frame layout
     mainPanel.setLayout(null);
-    mainPanel.setBackground(new Color(240, 240, 240));
-    mainPanel.add(iconLabel);
-    mainPanel.add(buttonPanel);
+    mainPanel.setBackground(new Color(240, 240, 240)); // We'll add iconLabel to videoPanel instead
+    mainPanel.add(buttonPanel);// Create a container panel for the video with FlowLayout for centering
+    JPanel videoPanel = new JPanel();
+    videoPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
+    videoPanel.add(iconLabel);
 
-    // Increase video display area
-    iconLabel.setBounds(0, 0, 640, 480);
-    buttonPanel.setBounds(0, 480, 640, 60);
+    // Set video display area with proper layout
+    videoPanel.setBounds(0, 0, 650, 480);
+    buttonPanel.setBounds(0, 480, 650, 60);
+
+    // Add the video panel to the main panel
+    mainPanel.add(videoPanel);
 
     f.getContentPane().add(mainPanel, BorderLayout.CENTER);
     f.setSize(new Dimension(650, 580));
@@ -212,279 +219,286 @@ public class Client { // GUI
           state = READY; // change RTSP state and print out new state
           System.out.println("New RTSP state: READY");
         }
-      }else if(state!=INIT)
+      } else if (state != INIT)
 
-    {
-      System.out.println("do nothing! Invalid state");
-    }
-  }
-}
-
-// Handler for Play button
-// -----------------------
-class playButtonListener implements ActionListener {
-  public void actionPerformed(ActionEvent e) {
-
-    // System.out.println("Play Button pressed !");
-
-    if (state == READY) {
-      // increase RTSP sequence number
-      // .....
-      RTSPSeqNb++;
-
-      // Send PLAY message to the server
-      send_RTSP_request("PLAY");
-
-      // Wait for the response
-      if (parse_server_response() != 200)
-        System.out.println("Invalid Server Response");
-      else {
-        state = PLAYING; // change RTSP state and print out new state
-        System.out.println("New RTSP state: PLAYING");
-        timer.start();
+      {
+        System.out.println("do nothing! Invalid state");
       }
-    } else if (state != READY) {
-      System.out.println("do nothing! Invalid state");
     }
   }
-}
 
-// Handler for Pause button
-// -----------------------
-class pauseButtonListener implements ActionListener {
-  public void actionPerformed(ActionEvent e) {
+  // Handler for Play button
+  // -----------------------
+  class playButtonListener implements ActionListener {
+    public void actionPerformed(ActionEvent e) {
 
-    // System.out.println("Pause Button pressed !");
+      // System.out.println("Play Button pressed !");
 
-    if (state == PLAYING) {
-      // increase RTSP sequence number
-      // ........
-      RTSPSeqNb++;
-      // Send PAUSE message to the server
-      send_RTSP_request("PAUSE");
+      if (state == READY) {
+        // increase RTSP sequence number
+        // .....
+        RTSPSeqNb++;
 
-      // Wait for the response
-      if (parse_server_response() != 200)
-        System.out.println("Invalid Server Response");
-      else {
-        // change RTSP state and print out new state
+        // Send PLAY message to the server
+        send_RTSP_request("PLAY");
+
+        // Wait for the response
+        if (parse_server_response() != 200)
+          System.out.println("Invalid Server Response");
+        else {
+          state = PLAYING; // change RTSP state and print out new state
+          System.out.println("New RTSP state: PLAYING");
+          timer.start();
+        }
+      } else if (state != READY) {
+        System.out.println("do nothing! Invalid state");
+      }
+    }
+  }
+
+  // Handler for Pause button
+  // -----------------------
+  class pauseButtonListener implements ActionListener {
+    public void actionPerformed(ActionEvent e) {
+
+      // System.out.println("Pause Button pressed !");
+
+      if (state == PLAYING) {
+        // increase RTSP sequence number
         // ........
-        // System.out.println("New RTSP state: ...");
-        state = READY;
-        System.out.println("New RTSP state: READY");
-        // stop the timer
-        timer.stop();
+        RTSPSeqNb++;
+        // Send PAUSE message to the server
+        send_RTSP_request("PAUSE");
+
+        // Wait for the response
+        if (parse_server_response() != 200)
+          System.out.println("Invalid Server Response");
+        else {
+          // change RTSP state and print out new state
+          // ........
+          // System.out.println("New RTSP state: ...");
+          state = READY;
+          System.out.println("New RTSP state: READY");
+          // stop the timer
+          timer.stop();
+        }
+      } else if (state != PLAYING) {
+        System.out.println("do nothing! Invalid state");
       }
-    } else if (state != PLAYING) {
-      System.out.println("do nothing! Invalid state");
     }
   }
-}
 
-// Handler for Teardown button
-// -----------------------
-class tearButtonListener implements ActionListener {
-  public void actionPerformed(ActionEvent e) {
+  // Handler for Teardown button
+  // -----------------------
+  class tearButtonListener implements ActionListener {
+    public void actionPerformed(ActionEvent e) {
 
-    // System.out.println("Teardown Button pressed !");
-
-    // increase RTSP sequence number
-    // ..........
-    RTSPSeqNb++;
-
-    // Send TEARDOWN message to the server
-    send_RTSP_request("TEARDOWN");
-
-    // Wait for the response
-    if (parse_server_response() != 200)
-      System.out.println("Invalid Server Response");
-    else {
-      state = INIT;
-      System.out.println("New RTSP state: INIT");
-      timer.stop();
-      System.exit(0);
-    }
-  }
-} // Handler for Advance button
-// -----------------------
-
-class advanceButtonListener implements ActionListener {
-  public void actionPerformed(ActionEvent e) {
-    System.out.println("Advance Button pressed!");
-
-    if (state == READY || state == PLAYING) {
-      boolean wasPlaying = (state == PLAYING);
-
-      // If playing, pause the timer temporarily to avoid conflicts
-      if (wasPlaying) {
-        timer.stop();
-      }
+      // System.out.println("Teardown Button pressed !");
 
       // increase RTSP sequence number
+      // ..........
       RTSPSeqNb++;
-      System.out.println("Sending ADVANCE request, sequence number: " + RTSPSeqNb);
 
-      // Send ADVANCE message to the server (custom RTSP command)
-      send_RTSP_request("ADVANCE");
+      // Send TEARDOWN message to the server
+      send_RTSP_request("TEARDOWN");
 
       // Wait for the response
-      int response = parse_server_response();
-      System.out.println("Received response code: " + response);
-
-      if (response != 200) {
+      if (parse_server_response() != 200)
         System.out.println("Invalid Server Response");
-      } else {
-        System.out.println("Advanced to next frame");
-
-        // Force frame update by explicitly receiving a new frame
-        try {
-          // We need to receive the RTP packet that the server sent after ADVANCE
-          DatagramPacket framePacket = new DatagramPacket(buf, buf.length);
-          RTPsocket.setSoTimeout(1000); // Set a longer timeout to wait for frame
-          RTPsocket.receive(framePacket);
-          RTPsocket.setSoTimeout(5); // Reset timeout to original value
-
-          // Create an RTP packet from the received data
-          RTPpacket rtp_packet = new RTPpacket(framePacket.getData(), framePacket.getLength());
-
-          System.out.println("Received frame after ADVANCE: SeqNum # " +
-              rtp_packet.getsequencenumber() + " TimeStamp " + rtp_packet.gettimestamp());
-
-          // Get the payload and update the display
-          int payload_length = rtp_packet.getpayload_length();
-          byte[] payload = new byte[payload_length];
-          rtp_packet.getpayload(payload);
-
-          // Update the image display
-          Toolkit toolkit = Toolkit.getDefaultToolkit();
-          Image image = toolkit.createImage(payload, 0, payload_length);
-          icon = new ImageIcon(image);
-          iconLabel.setIcon(icon);
-        } catch (Exception ex) {
-          System.out.println("Error receiving frame after ADVANCE: " + ex);
-        }
-      }
-
-      // If was playing, restart the timer
-      if (wasPlaying) {
-        timer.start();
-      }
-    } else {
-      System.out.println("Cannot advance: Invalid state");
-    }
-  }
-} // Handler for Go Back button
-// -----------------------
-
-class backButtonListener implements ActionListener {
-  public void actionPerformed(ActionEvent e) {
-    System.out.println("Go Back Button pressed!");
-
-    if (state == READY || state == PLAYING) {
-      boolean wasPlaying = (state == PLAYING);
-
-      // If playing, pause the timer temporarily to avoid conflicts
-      if (wasPlaying) {
+      else {
+        state = INIT;
+        System.out.println("New RTSP state: INIT");
         timer.stop();
+        System.exit(0);
       }
+    }
+  } // Handler for Advance button
+  // -----------------------
 
-      // increase RTSP sequence number
-      RTSPSeqNb++;
-      System.out.println("Sending BACK request, sequence number: " + RTSPSeqNb);
+  class advanceButtonListener implements ActionListener {
+    public void actionPerformed(ActionEvent e) {
+      System.out.println("Advance Button pressed!");
 
-      // Send BACK message to the server (custom RTSP command)
-      send_RTSP_request("BACK");
+      if (state == READY || state == PLAYING) {
+        boolean wasPlaying = (state == PLAYING);
 
-      // Wait for the response
-      int response = parse_server_response();
-      System.out.println("Received response code: " + response);
-
-      if (response != 200) {
-        System.out.println("Invalid Server Response");
-      } else {
-        System.out.println("Went back to previous frame");
-
-        // Force frame update by explicitly receiving a new frame
-        try {
-          // We need to receive the RTP packet that the server sent after BACK
-          DatagramPacket framePacket = new DatagramPacket(buf, buf.length);
-          RTPsocket.setSoTimeout(1000); // Set a longer timeout to wait for frame
-          RTPsocket.receive(framePacket);
-          RTPsocket.setSoTimeout(5); // Reset timeout to original value
-
-          // Create an RTP packet from the received data
-          RTPpacket rtp_packet = new RTPpacket(framePacket.getData(), framePacket.getLength());
-
-          System.out.println("Received frame after BACK: SeqNum # " +
-              rtp_packet.getsequencenumber() + " TimeStamp " + rtp_packet.gettimestamp());
-
-          // Get the payload and update the display
-          int payload_length = rtp_packet.getpayload_length();
-          byte[] payload = new byte[payload_length];
-          rtp_packet.getpayload(payload);
-
-          // Update the image display
-          Toolkit toolkit = Toolkit.getDefaultToolkit();
-          Image image = toolkit.createImage(payload, 0, payload_length);
-          icon = new ImageIcon(image);
-          iconLabel.setIcon(icon);
-        } catch (Exception ex) {
-          System.out.println("Error receiving frame after BACK: " + ex);
+        // If playing, pause the timer temporarily to avoid conflicts
+        if (wasPlaying) {
+          timer.stop();
         }
-      }
 
-      // If was playing, restart the timer
-      if (wasPlaying) {
-        timer.start();
+        // increase RTSP sequence number
+        RTSPSeqNb++;
+        System.out.println("Sending ADVANCE request, sequence number: " + RTSPSeqNb);
+
+        // Send ADVANCE message to the server (custom RTSP command)
+        send_RTSP_request("ADVANCE");
+
+        // Wait for the response
+        int response = parse_server_response();
+        System.out.println("Received response code: " + response);
+
+        if (response != 200) {
+          System.out.println("Invalid Server Response");
+        } else {
+          System.out.println("Advanced to next frame");
+
+          // Force frame update by explicitly receiving a new frame
+          try {
+            // We need to receive the RTP packet that the server sent after ADVANCE
+            DatagramPacket framePacket = new DatagramPacket(buf, buf.length);
+            RTPsocket.setSoTimeout(1000); // Set a longer timeout to wait for frame
+            RTPsocket.receive(framePacket);
+            RTPsocket.setSoTimeout(5); // Reset timeout to original value
+
+            // Create an RTP packet from the received data
+            RTPpacket rtp_packet = new RTPpacket(framePacket.getData(), framePacket.getLength());
+
+            System.out.println("Received frame after ADVANCE: SeqNum # " +
+                rtp_packet.getsequencenumber() + " TimeStamp " + rtp_packet.gettimestamp());
+
+            // Get the payload and update the display
+            int payload_length = rtp_packet.getpayload_length();
+            byte[] payload = new byte[payload_length];
+            rtp_packet.getpayload(payload); // Update the image display
+            Toolkit toolkit = Toolkit.getDefaultToolkit();
+            Image image = toolkit.createImage(payload, 0, payload_length);
+            icon = new ImageIcon(image);
+            iconLabel.setIcon(icon);
+
+            // Ensure the image is centered within the label
+            iconLabel.setHorizontalAlignment(JLabel.CENTER);
+            iconLabel.setVerticalAlignment(JLabel.CENTER);
+          } catch (Exception ex) {
+            System.out.println("Error receiving frame after ADVANCE: " + ex);
+          }
+        }
+
+        // If was playing, restart the timer
+        if (wasPlaying) {
+          timer.start();
+        }
+      } else {
+        System.out.println("Cannot advance: Invalid state");
       }
-    } else {
-      System.out.println("Cannot go back: Invalid state");
+    }
+  } // Handler for Go Back button
+  // -----------------------
+
+  class backButtonListener implements ActionListener {
+    public void actionPerformed(ActionEvent e) {
+      System.out.println("Go Back Button pressed!");
+
+      if (state == READY || state == PLAYING) {
+        boolean wasPlaying = (state == PLAYING);
+
+        // If playing, pause the timer temporarily to avoid conflicts
+        if (wasPlaying) {
+          timer.stop();
+        }
+
+        // increase RTSP sequence number
+        RTSPSeqNb++;
+        System.out.println("Sending BACK request, sequence number: " + RTSPSeqNb);
+
+        // Send BACK message to the server (custom RTSP command)
+        send_RTSP_request("BACK");
+
+        // Wait for the response
+        int response = parse_server_response();
+        System.out.println("Received response code: " + response);
+
+        if (response != 200) {
+          System.out.println("Invalid Server Response");
+        } else {
+          System.out.println("Went back to previous frame");
+
+          // Force frame update by explicitly receiving a new frame
+          try {
+            // We need to receive the RTP packet that the server sent after BACK
+            DatagramPacket framePacket = new DatagramPacket(buf, buf.length);
+            RTPsocket.setSoTimeout(1000); // Set a longer timeout to wait for frame
+            RTPsocket.receive(framePacket);
+            RTPsocket.setSoTimeout(5); // Reset timeout to original value
+
+            // Create an RTP packet from the received data
+            RTPpacket rtp_packet = new RTPpacket(framePacket.getData(), framePacket.getLength());
+
+            System.out.println("Received frame after BACK: SeqNum # " +
+                rtp_packet.getsequencenumber() + " TimeStamp " + rtp_packet.gettimestamp());
+
+            // Get the payload and update the display
+            int payload_length = rtp_packet.getpayload_length();
+            byte[] payload = new byte[payload_length];
+            rtp_packet.getpayload(payload); // Update the image display
+            Toolkit toolkit = Toolkit.getDefaultToolkit();
+            Image image = toolkit.createImage(payload, 0, payload_length);
+            icon = new ImageIcon(image);
+            iconLabel.setIcon(icon);
+
+            // Ensure the image is centered within the label
+            iconLabel.setHorizontalAlignment(JLabel.CENTER);
+            iconLabel.setVerticalAlignment(JLabel.CENTER);
+          } catch (Exception ex) {
+            System.out.println("Error receiving frame after BACK: " + ex);
+          }
+        }
+
+        // If was playing, restart the timer
+        if (wasPlaying) {
+          timer.start();
+        }
+      } else {
+        System.out.println("Cannot go back: Invalid state");
+      }
     }
   }
-}
 
-// ------------------------------------
-// Handler for timer
-// ------------------------------------
+  // ------------------------------------
+  // Handler for timer
+  // ------------------------------------
 
-class timerListener implements ActionListener {
-  public void actionPerformed(ActionEvent e) {
+  class timerListener implements ActionListener {
+    public void actionPerformed(ActionEvent e) {
 
-    // Construct a DatagramPacket to receive data from the UDP socket
-    rcvdp = new DatagramPacket(buf, buf.length);
+      // Construct a DatagramPacket to receive data from the UDP socket
+      rcvdp = new DatagramPacket(buf, buf.length);
 
-    try {
-      // receive the DP from the socket:
-      RTPsocket.receive(rcvdp);
+      try {
+        // receive the DP from the socket:
+        RTPsocket.receive(rcvdp);
 
-      // create an RTPpacket object from the DP
-      RTPpacket rtp_packet = new RTPpacket(rcvdp.getData(), rcvdp.getLength());
+        // create an RTPpacket object from the DP
+        RTPpacket rtp_packet = new RTPpacket(rcvdp.getData(), rcvdp.getLength());
 
-      // print important header fields of the RTP packet received:
-      System.out.println("Got RTP packet with SeqNum # " + rtp_packet.getsequencenumber() + " TimeStamp "
-          + rtp_packet.gettimestamp() + " ms, of type " + rtp_packet.getpayloadtype());
+        // print important header fields of the RTP packet received:
+        System.out.println("Got RTP packet with SeqNum # " + rtp_packet.getsequencenumber() + " TimeStamp "
+            + rtp_packet.gettimestamp() + " ms, of type " + rtp_packet.getpayloadtype());
 
-      // print header bitstream:
-      rtp_packet.printheader();
+        // print header bitstream:
+        rtp_packet.printheader();
 
-      // get the payload bitstream from the RTPpacket object
-      int payload_length = rtp_packet.getpayload_length();
-      byte[] payload = new byte[payload_length];
-      rtp_packet.getpayload(payload);
+        // get the payload bitstream from the RTPpacket object
+        int payload_length = rtp_packet.getpayload_length();
+        byte[] payload = new byte[payload_length];
+        rtp_packet.getpayload(payload);
 
-      // get an Image object from the payload bitstream
-      Toolkit toolkit = Toolkit.getDefaultToolkit();
-      Image image = toolkit.createImage(payload, 0, payload_length);
+        // get an Image object from the payload bitstream
+        Toolkit toolkit = Toolkit.getDefaultToolkit();
+        Image image = toolkit.createImage(payload, 0, payload_length); // display the image as an ImageIcon object and
+                                                                       // ensure centering
+        icon = new ImageIcon(image);
+        iconLabel.setIcon(icon);
 
-      // display the image as an ImageIcon object
-      icon = new ImageIcon(image);
-      iconLabel.setIcon(icon);
-    } catch (InterruptedIOException iioe) {
-      // System.out.println("Nothing to read");
-    } catch (IOException ioe) {
-      System.out.println("Exception caught: " + ioe);
+        // Ensure the image is centered within the label
+        iconLabel.setHorizontalAlignment(JLabel.CENTER);
+        iconLabel.setVerticalAlignment(JLabel.CENTER);
+      } catch (InterruptedIOException iioe) {
+        // System.out.println("Nothing to read");
+      } catch (IOException ioe) {
+        System.out.println("Exception caught: " + ioe);
+      }
     }
-  }
 
   }
 
